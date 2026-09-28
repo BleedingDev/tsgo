@@ -1,5 +1,12 @@
 # @effect/tsgo
 
+## 0.47.0
+
+### Minor Changes
+
+- b67ef81: Update the Effect v4 integration to `4.0.0-rc.118` and use its public module paths. Namespace auto-imports for nested modules now resolve to paths such as `effect/cli/Prompt`.
+- 66668e2: Add the `experimentalApiUsage` and `unstableApiUsage` diagnostics for APIs marked with `@stability experimental` or `@stability unstable`. Both rules warn by default. For example, a reference to an unstable API now reports that breaking changes may happen between versions.
+
 ## 0.46.1
 
 ### Patch Changes
