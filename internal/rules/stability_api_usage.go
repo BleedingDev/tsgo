@@ -97,7 +97,9 @@ func runStabilityApiUsage(ctx *rule.Context, wanted string) []*ast.Diagnostic {
 					properties := ctx.Checker.GetPropertySymbolsFromContextualType(node, contextualType, false)
 					// Generic inference can point back to the literal's own
 					// property. Use the constraint instead, as go-to-definition
-					// does, so its stability tag is not lost to inference.
+					// does, so its stability tag is not lost to inference. The
+					// constraint comes from the already resolved signature; the
+					// call is not resolved again.
 					if slices.ContainsFunc(properties, func(symbol *ast.Symbol) bool { return ast.TSGetSymbolValueDeclaration(symbol) == node }) {
 						constraintType := ctx.TypeParser.CachedObjectLiteralConstraintContextualType(node.Parent)
 						if constraintType != nil {

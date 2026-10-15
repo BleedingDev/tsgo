@@ -115,6 +115,8 @@ func Checker_getIndexInfosOfType(recv *checker.Checker, t *checker.Type) []*chec
 func Checker_getSignaturesOfSymbol(recv *checker.Checker, symbol *ast.Symbol) []*checker.Signature
 //go:linkname Checker_getTypeArguments github.com/microsoft/TypeScript/tsc/internal/checker.(*Checker).getTypeArguments
 func Checker_getTypeArguments(recv *checker.Checker, t *checker.Type) []*checker.Type
+//go:linkname Checker_instantiateType github.com/microsoft/TypeScript/tsc/internal/checker.(*Checker).instantiateType
+func Checker_instantiateType(recv *checker.Checker, t *checker.Type, m *checker.TypeMapper) *checker.Type
 //go:linkname Checker_getTypeParameterFromMappedType github.com/microsoft/TypeScript/tsc/internal/checker.(*Checker).getTypeParameterFromMappedType
 func Checker_getTypeParameterFromMappedType(recv *checker.Checker, t *checker.Type) *checker.Type
 //go:linkname Checker_getConstraintTypeFromMappedType github.com/microsoft/TypeScript/tsc/internal/checker.(*Checker).getConstraintTypeFromMappedType
@@ -139,6 +141,10 @@ func Checker_isNoInferType(recv *checker.Checker, t *checker.Type) bool
 func Checker_newFunctionType(recv *checker.Checker, typeParameters []*checker.Type, thisParameter *ast.Symbol, parameters []*ast.Symbol, returnType *checker.Type) *checker.Type
 //go:linkname Checker_newCallSignature github.com/microsoft/TypeScript/tsc/internal/checker.(*Checker).newCallSignature
 func Checker_newCallSignature(recv *checker.Checker, typeParameters []*checker.Type, thisParameter *ast.Symbol, parameters []*ast.Symbol, returnType *checker.Type) *checker.Signature
+//go:linkname Checker_pushContextualType github.com/microsoft/TypeScript/tsc/internal/checker.(*Checker).pushContextualType
+func Checker_pushContextualType(recv *checker.Checker, node *ast.Node, t *checker.Type, isCache bool)
+//go:linkname Checker_popContextualType github.com/microsoft/TypeScript/tsc/internal/checker.(*Checker).popContextualType
+func Checker_popContextualType(recv *checker.Checker)
 //go:linkname Checker_isSymbolAssigned github.com/microsoft/TypeScript/tsc/internal/checker.(*Checker).isSymbolAssigned
 func Checker_isSymbolAssigned(recv *checker.Checker, symbol *ast.Symbol) bool
 //go:linkname Checker_isPastLastAssignment github.com/microsoft/TypeScript/tsc/internal/checker.(*Checker).isPastLastAssignment
@@ -1484,3 +1490,5 @@ const WideningKindNormal = checker.WideningKindNormal
 func ForEachYieldExpression(body *ast.Node, visitor func(expr *ast.Node) bool) bool
 //go:linkname GetMappedTypeModifiers github.com/microsoft/TypeScript/tsc/internal/checker.getMappedTypeModifiers
 func GetMappedTypeModifiers(t *checker.Type) checker.MappedTypeModifiers
+//go:linkname NewTypeMapper github.com/microsoft/TypeScript/tsc/internal/checker.newTypeMapper
+func NewTypeMapper(sources []*checker.Type, targets []*checker.Type) *checker.TypeMapper
