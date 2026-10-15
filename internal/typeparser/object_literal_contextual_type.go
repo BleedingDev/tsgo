@@ -42,9 +42,8 @@ func (tp *TypeParser) objectLiteralConstraintContextualType(node *ast.Node) *che
 	if call == nil {
 		return nil
 	}
-	arguments := call.Arguments()
-	argumentIndex := slices.Index(arguments, argument)
-	if argumentIndex < 0 || slices.ContainsFunc(arguments[:argumentIndex+1], ast.IsSpreadElement) {
+	position, ok := tp.argumentPosition(call, argument)
+	if !ok {
 		return nil
 	}
 	c := tp.checker
@@ -59,20 +58,24 @@ func (tp *TypeParser) objectLiteralConstraintContextualType(node *ast.Node) *che
 		return nil
 	}
 	// Constraints may mention other type parameters, so instantiate them with
-	// the inferences of the resolved signature.
+	// the inferences of the resolved signature. An unconstrained type parameter
+	// may have been inferred from this literal, so it becomes unknown, as it
+	// would with the literal's inferences removed.
 	inferred := checker.NewTypeMapper(typeParameters, typeArguments)
-	constrained := slices.Clone(typeArguments)
+	constrained := make([]*checker.Type, len(typeParameters))
 	hasConstraint := false
 	for i, typeParameter := range typeParameters {
 		if constraint := c.GetConstraintOfTypeParameter(typeParameter); constraint != nil {
 			constrained[i] = checker.Checker_instantiateType(c, constraint, inferred)
 			hasConstraint = true
+		} else {
+			constrained[i] = c.GetUnknownType()
 		}
 	}
 	if !hasConstraint {
 		return nil
 	}
-	parameterType := c.GetTypeAtPosition(target, argumentIndex)
+	parameterType := c.GetTypeAtPosition(target, position)
 	if parameterType == nil {
 		return nil
 	}
@@ -97,4 +100,35 @@ func containingCallArgument(node *ast.Node) (*ast.Node, *ast.Node) {
 		}
 	}
 	return nil, nil
+}
+
+// argumentPosition returns the parameter position of argument in call. Spread
+// arguments before it must be tuples without rest or variadic elements; each
+// element takes one position, as in the checker's effective call arguments.
+// A spread whose length is not known, or a spread argument itself, has no
+// position.
+func (tp *TypeParser) argumentPosition(call *ast.Node, argument *ast.Node) (int, bool) {
+	if ast.IsSpreadElement(argument) {
+		return 0, false
+	}
+	position := 0
+	for _, current := range call.Arguments() {
+		if current == argument {
+			return position, true
+		}
+		if !ast.IsSpreadElement(current) {
+			position++
+			continue
+		}
+		spreadType := tp.GetTypeAtLocation(current.Expression())
+		if spreadType == nil || !checker.IsTupleType(spreadType) {
+			return 0, false
+		}
+		elementFlags := spreadType.TargetTupleType().ElementFlags()
+		if slices.ContainsFunc(elementFlags, func(flags checker.ElementFlags) bool { return flags&checker.ElementFlagsVariable != 0 }) {
+			return 0, false
+		}
+		position += len(elementFlags)
+	}
+	return 0, false
 }
